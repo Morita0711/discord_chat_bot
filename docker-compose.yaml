@@ -1,0 +1,8 @@
+services:
+
+  llm:
+    image: app
+    ports:
+      - "8080:80"
+    environment:
+      - OPENAI_API_KEY=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

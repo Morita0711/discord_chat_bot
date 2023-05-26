@@ -7,4 +7,8 @@ format:
 	black .
 	isort .
 image: 
+	@make ingest
 	@gcloud builds submit --tag gcr.io/mineonlium/partyllm
+
+ingest:
+	@python ingest.py

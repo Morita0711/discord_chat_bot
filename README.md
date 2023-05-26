@@ -15,5 +15,5 @@
 1. Run `uvicorn srv:app --reload` to start the API server. 
 1. Send HTTP Post requests to the `/chat` route I.E:
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"question": "What is triggermesh?"}' http://localhost:8000/chat
+curl -X POST -H "Content-Type: application/json" -d '{"question": "hello?"}' http://139.144.159.120/chat
 ```

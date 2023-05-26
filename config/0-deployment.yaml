@@ -16,6 +16,11 @@ spec:
     spec:
       containers:
       - name: partyllm
-        image: gcr.io/mineonlium/partyllm
+        image: gcr.io/mineonlium/partyllm@sha256:db549017b61c4b5b52f73c5afb70678afa0d01ae30321a6f0e7d4e62ea485f4a
         ports:
         - containerPort: 80
+        env:
+        - name: OPENAI_API_KEY
+          value: "sk-x..."
+
+              
