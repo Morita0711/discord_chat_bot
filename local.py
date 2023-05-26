@@ -3,12 +3,11 @@ import logging
 import pickle
 from pathlib import Path
 from typing import Optional
-from transformers import AutoModelForCausalLM, AutoTokenizer, Pipeline
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from langchain.vectorstores import VectorStore
-model_name = "deepset/roberta-base-squad2"
 
 from callback import QuestionGenCallbackHandler
 from schemas import ChatResponse
@@ -16,22 +15,23 @@ from schemas import ChatResponse
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 vectorstore: Optional[VectorStore] = None
-llm_model = model_name
-llm_pipeline = pipeline('question-answering', model=model_name, tokenizer=model_name)
+qa_model = None
 
 @app.on_event("startup")
 async def startup_event():
-    logging.info("loading vectorstore and local LLM")
+    logging.info("loading vectorstore")
     if not Path("vectorstore.pkl").exists():
         raise ValueError("vectorstore.pkl does not exist, please run ingest.py first")
     with open("vectorstore.pkl", "rb") as f:
         global vectorstore
         vectorstore = pickle.load(f)
+    
+    global qa_model
+    model_name = "deepset/roberta-base-squad2"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForQuestionAnswering.from_pretrained(model_name, use_auth_token=True)
 
-    global llm_model, llm_pipeline
-    llm_model = AutoModelForCausalLM.from_pretrained("model_path")
-    tokenizer = AutoTokenizer.from_pretrained("model_path")
-    llm_pipeline = Pipeline(model=llm_model, tokenizer=tokenizer, task='text-generation')
+    qa_model = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 @app.get("/")
 async def get(request: Request):
@@ -42,6 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     question_handler = QuestionGenCallbackHandler(websocket)
     chat_history = []
+
     while True:
         try:
             # Receive and send back the client message
@@ -53,8 +54,20 @@ async def websocket_endpoint(websocket: WebSocket):
             start_resp = ChatResponse(sender="bot", message="", type="start")
             await websocket.send_json(start_resp.dict())
 
-            result = llm_pipeline(question)
-            chat_history.append((question, result))
+            if chat_history:
+                context = ' '.join([msg[1] for msg in chat_history])
+            else:
+                context = 'No previous chat history.'
+            QA_input = {
+                'question': question,
+                'context': context
+            }
+            result = qa_model(QA_input)
+
+            chat_history.append((question, result['answer']))
+
+            answer_resp = ChatResponse(sender="bot", message=result['answer'], type="stream")
+            await websocket.send_json(answer_resp.dict())
 
             end_resp = ChatResponse(sender="bot", message="", type="end")
             await websocket.send_json(end_resp.dict())

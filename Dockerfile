@@ -13,7 +13,7 @@ ADD vectorstore.pkl /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Make port 80 available to the world outside this container
-EXPOSE 80
+EXPOSE 8000
 
 # Run the application when the container launches
-CMD ["uvicorn", "srv:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "srv:app", "--host", "0.0.0.0","--port", "8000"]

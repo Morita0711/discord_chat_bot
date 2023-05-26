@@ -1,8 +1,12 @@
+# this is currently not working
+
 services:
 
   llm:
-    image: app
+    image: gcr.io/mineonlium/partyllm@sha256:db7199747fcada2222277113a388b2f5eeee41e140510eb9426d3ec018e40be8
     ports:
-      - "8080:80"
+      - "8000:8000"
     environment:
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=
+    volumes:
+      - ./vectorstore.pkl:/app/vectorstore.pkl
