@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: partyllm-deployment
+  labels:
+    app: partyllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: partyllm
+  template:
+    metadata:
+      labels:
+        app: partyllm
+    spec:
+      containers:
+      - name: partyllm
+        image: gcr.io/mineonlium/partyllm
+        ports:
+        - containerPort: 80

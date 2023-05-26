@@ -6,3 +6,5 @@ start:
 format:
 	black .
 	isort .
+image: 
+	@gcloud builds submit --tag gcr.io/mineonlium/partyllm
